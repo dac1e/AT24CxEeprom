@@ -31,37 +31,12 @@
 #include <Wire.h>
 
 #include "AT24CxEeprom.h"
-#include "test\AT24CxDebug.h"
-
-// Set this macro to true for printing debug output.
-#ifndef AT24_ENABLE_DEBUG
-#define AT24_ENABLE_DEBUG true
-#endif
-
-
-#ifdef ARDUINO_ARCH_SAM
-	#include <WireBuffer.h>
-	constexpr size_t RECEIVE_BUFFER_SIZE  = 32;
-	constexpr size_t TRANSMIT_BUFFER_SIZE = 34;
-
-	SET_Wire_BUFFERS(RECEIVE_BUFFER_SIZE, TRANSMIT_BUFFER_SIZE,
-		true /* master buffers needed */, false /* no slave buffers needed */ );
-#endif
 
 #undef min
 #undef max
 
 
-// Map AT24 debug macros to Debug class
-#define debugAt24_println 					AT24CxDebug::Debug<AT24CxDebug::AT24_, AT24_ENABLE_DEBUG>::println
-#define debugAt24_print	 						AT24CxDebug::Debug<AT24CxDebug::AT24_, AT24_ENABLE_DEBUG>::print
-#define debugAt24_printts 					AT24CxDebug::Debug<AT24CxDebug::AT24_, AT24_ENABLE_DEBUG>::printts
-#define debugAt24_printtsln 				AT24CxDebug::Debug<AT24CxDebug::AT24_, AT24_ENABLE_DEBUG>::printtsln
-
 void AT24CxEeprom::begin() {
-#if AT24_ENABLE_DEBUG
-  AT24_DEBUG_OUTPUT.begin(115200);
-#endif
 	mWire.begin();
 }
 
@@ -71,9 +46,6 @@ void AT24CxEeprom::begin(CLOCK_SPEED_HZ speed) {
 }
 
 bool AT24CxEeprom::write(const uint16_t address, const uint8_t byte) {
-	debugAt24_printts("write, at address ");
-	debugAt24_println(address);
-
 	ASSERT(address < totalSize());
 
 	size_t i = 0;
@@ -86,14 +58,7 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t byte) {
 
 		// write data
 		mWire.write(byte);
-
 		const ERROR error = static_cast<ERROR>(mWire.endTransmission());
-
-		debugAt24_print("\tmWire.endTransmission returned error ");
-		debugAt24_print(error);
-		debugAt24_print(", in try: ");
-		debugAt24_println(i);
-
 		if (isOk(error)) {
 			return true;
 		}
@@ -106,9 +71,6 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t byte) {
 }
 
 bool AT24CxEeprom::read(const uint16_t address, uint8_t &byte) {
-	debugAt24_printts("read, at address ");
-	debugAt24_println(address);
-
 	size_t i = 0;
 	while (i < READ_RETRIES) {
 		mWire.beginTransmission(mAT24CxDeviceAddress);
@@ -119,23 +81,12 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t &byte) {
 
 		const ERROR error = static_cast<ERROR>(mWire.endTransmission());
 
-		debugAt24_print("\tmWire.endTransmission returned error ");
-		debugAt24_print(error);
-		debugAt24_print(", in try: ");
-		debugAt24_print(i);
-
 		if (isOk(error)) {
 			mWire.requestFrom(mAT24CxDeviceAddress, static_cast<uint8_t>(1));
 			if (mWire.available()) {
 				byte = mWire.read();
-				debugAt24_print(", byte: ");
-				debugAt24_println(byte);
-			} else {
-				debugAt24_println(", no byte available");
 			}
 			return true;
-		} else {
-			debugAt24_println();
 		}
 		++i;
 		delay(1);
@@ -164,9 +115,6 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t *bytes, const siz
 AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress, const uint8_t pageOffset,
 		const uint8_t *bytes, const size_t count) {
 
-	debugAt24_printts("writeToPage, at address ");
-	debugAt24_println(pageAlignedAddress + pageOffset);
-
 	ASSERT((pageAlignedAddress & pageOffsetMask()) == 0);
 	ASSERT((static_cast<uint32_t>(pageOffset) + count) <= pageSize());
 	ASSERT((static_cast<uint32_t>(pageAlignedAddress) + pageSize()) <= totalSize());
@@ -189,26 +137,11 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 			n = mWire.write(&bytes[bytesWritten], count - bytesWritten);
 			error = static_cast<ERROR>(mWire.endTransmission());
 
-			debugAt24_print("\tmWire.endTransmission returned error ");
-			debugAt24_print(error);
-			debugAt24_print(", in try: ");
-			debugAt24_print(w);
-
-			if (isOk(error)) {
-				debugAt24_print(", bytesWritten: ");
-				debugAt24_println(bytesWritten + n);
-				break;
-			} else {
-				debugAt24_println();
-			}
-
 			++w;
 			delay(1);
 		}
 
 		bytesWritten += n;
-		debugAt24_printts("write (re)tries: ");
-		debugAt24_println(w);
 	}
 
 	return error;
@@ -216,9 +149,6 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 
 AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress, const uint8_t pageOffset,
 		uint8_t *bytes, const size_t count) {
-
-	debugAt24_printts("readFromPage, at address ");
-	debugAt24_println(pageAlignedAddress + pageOffset);
 
 	ASSERT((pageAlignedAddress & pageOffsetMask()) == 0);
 	ASSERT((static_cast<uint32_t>(pageOffset) + count) <= pageSize());
@@ -239,11 +169,6 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 			mWire.write(lowByte(address));
 			error = static_cast<ERROR>(mWire.endTransmission());
 
-			debugAt24_print("\tmWire.endTransmission returned error ");
-			debugAt24_print(error);
-			debugAt24_print(", in try: ");
-			debugAt24_print(r);
-
 			if (isOk(error)) {
 				const size_t i = bytesRead;
 
@@ -253,9 +178,6 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 				n = mWire.requestFrom(mAT24CxDeviceAddress, nrequest);
 
 				if (mWire.available()) {
-					debugAt24_print(", bytesRead: ");
-					debugAt24_println(bytesRead + n);
-
 					for (size_t j = 0; j < n; j++) {
 						const int data = mWire.read();
 						ASSERT(data >= 0);
@@ -263,21 +185,15 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 					}
 				} else {
 					error = NO_DATA_AVAILABLE;
-					debugAt24_println(", no data available");
 				}
 
 				break;
-			} else {
-				debugAt24_println();
 			}
 
 			++r;
 			delay(1);
 		}
 		bytesRead += n;
-
-		debugAt24_printts("read (re)tries: ");
-		debugAt24_println(r);
 	}
 
 	return error;

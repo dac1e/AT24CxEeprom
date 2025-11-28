@@ -37,10 +37,6 @@
 #define UTS_BEGIN() printTestFunctionEntry(__FUNCTION__)
 #define UTS_END()   printTestFunctionExit (__FUNCTION__)
 
-namespace AT24CxTest {
-
-Test Test::instance;
-
 namespace { // anonymous
 
 void fillBuffer(uint8_t* buffer, size_t count, uint8_t pattern) {
@@ -49,6 +45,41 @@ void fillBuffer(uint8_t* buffer, size_t count, uint8_t pattern) {
 	}
 }
 
+}
+
+namespace AT24CxTest {
+
+Test Test::instance(Serial);
+
+void Test::printTestFunction(const char* const functionName) {
+  mTestLogOutput.print(suiteName());
+  mTestLogOutput.print("::");
+  mTestLogOutput.print(functionName);
+  mTestLogOutput.println(" ********");
+}
+
+void Test::printTestFunctionEntry(const char* const functionName) {
+  mTestLogOutput.print("\n******** entering ");
+  printTestFunction(functionName);
+}
+
+void Test::printTestFunctionExit(const char* const functionName) {
+  mTestLogOutput.print("******** exiting ");
+  printTestFunction(functionName);
+}
+
+void Test::utsAssert(bool expression) {
+  if(!expression) {
+    mTestLogOutput.print("test failed");
+    ASSERT(false);
+  }
+}
+
+void Test::utsmAssert(bool expression, const char* const failureMessage) {
+  if(!expression) {
+    mTestLogOutput.print(failureMessage);
+    ASSERT(false);
+  }
 }
 
 bool Test::writeReadAndCompare(size_t bytesCount, uint8_t pattern, uint16_t address) {
@@ -74,8 +105,8 @@ bool Test::writeReadAndCompare(size_t bytesCount, uint8_t pattern, uint16_t addr
 }
 
 
-Test::Test()
-		: base_t(Serial), mEeprom(nullptr) {
+Test::Test(Print& testLogOutput)
+		: mTestLogOutput(Serial), mEeprom(nullptr) {
 }
 
 void Test::setup() {

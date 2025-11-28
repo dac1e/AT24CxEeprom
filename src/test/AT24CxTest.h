@@ -27,21 +27,30 @@
 #ifndef AT24Cx_TEST_HPP_
 #define AT24Cx_TEST_HPP_
 
-#include "AT24CxTestSuite.h"
+#include <assert.h>
+#define ASSERT assert
 
 class AT24CxEeprom;
 
 namespace AT24CxTest {
 
-class Test : public TestSuite {
-	typedef TestSuite base_t;
+class Test {
+public:
+  static void run(AT24CxEeprom& eeprom) {
+    instance.mEeprom = &eeprom;
+    instance.setup();
+    instance.test_byteOperations();
+    instance.test_pageOperations();
+    instance.mEeprom = nullptr;
+  }
 
+private:
 	// The one and only at25eeprom
 	AT24CxEeprom* mEeprom;
 
-	Test();
+	Test(Print& testLogOutput);
 
-	const char* suiteName() const override {
+	const char* suiteName() const {
 		return "At24C256eeprom_test";
 
 	}
@@ -51,18 +60,35 @@ class Test : public TestSuite {
 	void test_byteOperations();
 	bool writeReadAndCompare(size_t bytesCount, uint8_t pattern, uint16_t address);
 
+  Print& mTestLogOutput;
+
+  void printTestFunctionEntry(const char *const functionName);
+  void printTestFunctionExit(const char *const functionName);
+  void printTestFunction(const char *const functionName);
+
+  void utsAssert(bool expression);
+  void utsmAssert(bool expression, const char *const failureMessage);
+
+  template<typename T>
+  void utsmAssert(bool expression, const char *const failureProlog, const T &value, const char *const failureEpilog);
+
 	static Test instance;
-
-public:
-	static void run(AT24CxEeprom& eeprom) {
-		instance.mEeprom = &eeprom;
-		instance.setup();
-		instance.test_byteOperations();
-		instance.test_pageOperations();
-		instance.mEeprom = nullptr;
-	}
-
 };
+
+template<typename T>
+inline void Test::utsmAssert(bool expression, const char *const failureProlog, const T &value,
+  const char *const failureEpilog) {
+  if (!expression) {
+    if (failureProlog) {
+      mTestLogOutput.print(failureProlog);
+    }
+    mTestLogOutput.print(value);
+    if (failureEpilog) {
+      mTestLogOutput.print(failureEpilog);
+    }
+    ASSERT(false);
+  }
+}
 
 } // namespace AT24CxTest
 
