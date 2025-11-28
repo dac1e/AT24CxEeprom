@@ -27,6 +27,6 @@
 
 namespace AT24CxDebug {
 
-typeof(Serial)* DebugBase::mSerial = &AT24_DEBUG_OUTPUT; // @suppress("Member declaration not found")
+Print* DebugBase::mSerial = &AT24_DEBUG_OUTPUT; // @suppress("Member declaration not found")
 
 }

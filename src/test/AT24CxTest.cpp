@@ -23,7 +23,7 @@
 */
 
 #ifndef AT24CxEepromEnableTest
-#define AT24CxEepromEnableTest false
+#define AT24CxEepromEnableTest true
 #endif
 
 #if AT24CxEepromEnableTest
@@ -52,18 +52,18 @@ void fillBuffer(uint8_t* buffer, size_t count, uint8_t pattern) {
 }
 
 bool Test::writeReadAndCompare(size_t bytesCount, uint8_t pattern, uint16_t address) {
-	uint8_t* writeBuffer = new uint8_t [2*mEeprom.pageSize()];
+	uint8_t* writeBuffer = new uint8_t [2*mEeprom->pageSize()];
 
 	fillBuffer(writeBuffer, bytesCount, pattern);
 	writeBuffer[0] = ~pattern; // First byte becomes different
 	writeBuffer[bytesCount-1] = ~pattern; // Last byte becomes different
-	mEeprom.write(address, writeBuffer , bytesCount);
+	mEeprom->write(address, writeBuffer , bytesCount);
 
 
 	delay(1);
 
-	uint8_t* readBuffer = new uint8_t [2*mEeprom.pageSize()];
-	mEeprom.read(address,readBuffer, bytesCount);
+	uint8_t* readBuffer = new uint8_t [2*mEeprom->pageSize()];
+	mEeprom->read(address,readBuffer, bytesCount);
 
 	const bool result = ( memcmp(readBuffer, writeBuffer, bytesCount) == 0 );
 
@@ -75,11 +75,11 @@ bool Test::writeReadAndCompare(size_t bytesCount, uint8_t pattern, uint16_t addr
 
 
 Test::Test()
-		: base_t(Serial), mEeprom(Wire, 0) {
+		: base_t(Serial), mEeprom(nullptr) {
 }
 
 void Test::setup() {
-	mEeprom.begin();
+	mEeprom->begin();
 }
 
 void Test::test_byteOperations() {
@@ -88,13 +88,13 @@ void Test::test_byteOperations() {
 	const uint16_t addr = 0;
 
 	uint8_t byte0;
-	mEeprom.read(addr, byte0);
+	mEeprom->read(addr, byte0);
 	byte0 = ~byte0;
 
-	mEeprom.write(addr, byte0);
+	mEeprom->write(addr, byte0);
 
 	uint8_t byte1;
-	mEeprom.read(addr, byte1);
+	mEeprom->read(addr, byte1);
 
 	utsAssert(byte1 == byte0);
 
@@ -105,14 +105,14 @@ void Test::test_pageOperations() {
 	UTS_BEGIN();
 
 	// Write 1 time page size
-	utsAssert(writeReadAndCompare(mEeprom.pageSize() / 2, 0x55, 0)); // All bytes within one pages.
-	utsAssert(writeReadAndCompare(mEeprom.pageSize(), 0x11, 1)); // Last byte is on 2nd page.
-	utsAssert(writeReadAndCompare(mEeprom.pageSize(), 0x22, mEeprom.pageSize()-1)); // All but first byte is on 2nd page.
+	utsAssert(writeReadAndCompare(mEeprom->pageSize() / 2, 0x55, 0)); // All bytes within one pages.
+	utsAssert(writeReadAndCompare(mEeprom->pageSize(), 0x11, 1)); // Last byte is on 2nd page.
+	utsAssert(writeReadAndCompare(mEeprom->pageSize(), 0x22, mEeprom->pageSize()-1)); // All but first byte is on 2nd page.
 
 	// Write 2 times page size
-	utsAssert(writeReadAndCompare(2*mEeprom.pageSize(), 0x33, 0)); // All bytes within 2 pages.
-	utsAssert(writeReadAndCompare(2*mEeprom.pageSize(), 0x44, 1)); // Last byte on 3rd page.
-	utsAssert(writeReadAndCompare(2*mEeprom.pageSize(), 0x55, mEeprom.pageSize())); // All but first byte on 2nd and 3rd page.
+	utsAssert(writeReadAndCompare(2*mEeprom->pageSize(), 0x33, 0)); // All bytes within 2 pages.
+	utsAssert(writeReadAndCompare(2*mEeprom->pageSize(), 0x44, 1)); // Last byte on 3rd page.
+	utsAssert(writeReadAndCompare(2*mEeprom->pageSize(), 0x55, mEeprom->pageSize())); // All but first byte on 2nd and 3rd page.
 
 	UTS_END();
 }

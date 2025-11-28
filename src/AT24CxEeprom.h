@@ -122,7 +122,7 @@ private:
 	static constexpr size_t WRITE_RETRIES = 8;
 	static constexpr size_t READ_RETRIES  = 8;
 
-	uint8_t mAT24C256DeviceAddress;
+	uint8_t mAT24CxDeviceAddress;
 	TwoWire& mWire;
 
 	inline uint32_t pageOffsetMask()const {return pageSize()-1;}

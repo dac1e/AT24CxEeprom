@@ -27,8 +27,9 @@
 #ifndef AT24Cx_TEST_HPP_
 #define AT24Cx_TEST_HPP_
 
-#include "../AT24CxEeprom.h"
 #include "AT24CxTestSuite.h"
+
+class AT24CxEeprom;
 
 namespace AT24CxTest {
 
@@ -36,7 +37,7 @@ class Test : public TestSuite {
 	typedef TestSuite base_t;
 
 	// The one and only at25eeprom
-	AT24C256 mEeprom;
+	AT24CxEeprom* mEeprom;
 
 	Test();
 
@@ -53,10 +54,12 @@ class Test : public TestSuite {
 	static Test instance;
 
 public:
-	static void run() {
+	static void run(AT24CxEeprom& eeprom) {
+		instance.mEeprom = &eeprom;
 		instance.setup();
 		instance.test_byteOperations();
 		instance.test_pageOperations();
+		instance.mEeprom = nullptr;
 	}
 
 };

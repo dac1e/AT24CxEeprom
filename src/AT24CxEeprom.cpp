@@ -35,7 +35,7 @@
 
 // Set this macro to true for printing debug output.
 #ifndef AT24_ENABLE_DEBUG
-#define AT24_ENABLE_DEBUG false
+#define AT24_ENABLE_DEBUG true
 #endif
 
 
@@ -58,8 +58,10 @@
 #define debugAt24_printts 					AT24CxDebug::Debug<AT24CxDebug::AT24_, AT24_ENABLE_DEBUG>::printts
 #define debugAt24_printtsln 				AT24CxDebug::Debug<AT24CxDebug::AT24_, AT24_ENABLE_DEBUG>::printtsln
 
-
 void AT24CxEeprom::begin() {
+#if AT24_ENABLE_DEBUG
+  AT24_DEBUG_OUTPUT.begin(115200);
+#endif
 	mWire.begin();
 }
 
@@ -76,7 +78,7 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t byte) {
 
 	size_t i = 0;
 	while (i < WRITE_RETRIES) {
-		mWire.beginTransmission(mAT24C256DeviceAddress);
+		mWire.beginTransmission(mAT24CxDeviceAddress);
 
 		// write address
 		mWire.write(highByte(address));
@@ -109,7 +111,7 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t &byte) {
 
 	size_t i = 0;
 	while (i < READ_RETRIES) {
-		mWire.beginTransmission(mAT24C256DeviceAddress);
+		mWire.beginTransmission(mAT24CxDeviceAddress);
 
 		// write address
 		mWire.write(highByte(address));
@@ -123,7 +125,7 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t &byte) {
 		debugAt24_print(i);
 
 		if (isOk(error)) {
-			mWire.requestFrom(mAT24C256DeviceAddress, static_cast<uint8_t>(1));
+			mWire.requestFrom(mAT24CxDeviceAddress, static_cast<uint8_t>(1));
 			if (mWire.available()) {
 				byte = mWire.read();
 				debugAt24_print(", byte: ");
@@ -176,7 +178,7 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 		size_t n = 0;
 		size_t w = 0;
 		while (w < WRITE_RETRIES) {
-			mWire.beginTransmission(mAT24C256DeviceAddress);
+			mWire.beginTransmission(mAT24CxDeviceAddress);
 
 			// write address
 			const uint16_t address = pageAlignedAddress + pageOffset + bytesWritten;
@@ -205,8 +207,8 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 		}
 
 		bytesWritten += n;
-		debugAt24_print("write (re)tries: ");
-		debugAt24_printtsln(w);
+		debugAt24_printts("write (re)tries: ");
+		debugAt24_println(w);
 	}
 
 	return error;
@@ -229,7 +231,7 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 		size_t n = 0;
 		size_t r = 0;
 		while (r < READ_RETRIES) {
-			mWire.beginTransmission(mAT24C256DeviceAddress);
+			mWire.beginTransmission(mAT24CxDeviceAddress);
 
 			// write address
 			const uint16_t address = pageAlignedAddress + pageOffset + bytesRead;
@@ -244,7 +246,11 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 
 			if (isOk(error)) {
 				const size_t i = bytesRead;
-				n = mWire.requestFrom(mAT24C256DeviceAddress, static_cast<uint8_t>(count - bytesRead));
+
+				// There is a bug in the Wire library that will cause an out of bounds crash, if we
+				// request more than the SERIAL_BUFFER_SIZE. Hence we better do the limitation here.
+				const size_t nrequest = std::min(static_cast<size_t>(SERIAL_BUFFER_SIZE), count - bytesRead);
+				n = mWire.requestFrom(mAT24CxDeviceAddress, nrequest);
 
 				if (mWire.available()) {
 					debugAt24_print(", bytesRead: ");
@@ -270,8 +276,8 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 		}
 		bytesRead += n;
 
-		debugAt24_print("read (re)tries: ");
-		debugAt24_printtsln(r);
+		debugAt24_printts("read (re)tries: ");
+		debugAt24_println(r);
 	}
 
 	return error;
@@ -296,7 +302,7 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t *bytes, const size_t cou
 }
 
 AT24CxEeprom::AT24CxEeprom(TwoWire& wire, uint8_t deviceAddress)
-		: mAT24C256DeviceAddress((deviceAddress | 0xa0) >> 1), mWire(wire) {
+		: mAT24CxDeviceAddress((deviceAddress | 0xa0) >> 1), mWire(wire) {
 }
 
 // --- Specific chips

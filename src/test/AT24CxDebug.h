@@ -32,7 +32,7 @@
 
 // Set the debug output
 #ifndef AT24_DEBUG_OUTPUT
-#define AT24_DEBUG_OUTPUT Serial
+#define AT24_DEBUG_OUTPUT Serial1
 #endif
 
 namespace AT24CxDebug {
@@ -72,11 +72,14 @@ public:
 
 class DebugBase {
 protected:
-	static typeof(Serial)* mSerial;
+	static Print* mSerial;
 	// print time stamp
 	static inline size_t printts() {
 		if(mSerial) {
-			return mSerial->print(millis());
+			size_t n = 0;
+			n +=mSerial->print(millis());
+			n += mSerial->print(": ");
+			return n;
 		}
 		return 0;
 	}
