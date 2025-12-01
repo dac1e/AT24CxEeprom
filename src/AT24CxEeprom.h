@@ -29,7 +29,14 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <Wire.h>
+
+// Forward declaration of TwoWire;
+#ifndef ARDUINO_ARCH_MBED
+class TwoWire;
+#else
+namespace arduino{class MbedI2C;}
+typedef arduino::MbedI2C TwoWire;
+#endif
 
 class AT24CxEeprom {
 public:
@@ -38,12 +45,7 @@ public:
 		CLK_HIGH_SPEED = 400000,
 	};
 
-	/**
-	 * Constructor
-	 * @param The Wire interface object to be used for I2C communication.
-	 * @param The lower 3 bits A2, A1, A0 of the device address 0..7
-	 */
-	AT24CxEeprom(TwoWire& wire, uint8_t deviceAddress);
+	AT24CxEeprom(TwoWire& wire, uint8_t deviceAddress /* 0..7 */);
 
 	/**
 	 * Initialize I2C bus for communication with EEPROM

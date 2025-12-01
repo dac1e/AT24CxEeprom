@@ -137,6 +137,10 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 			n = mWire.write(&bytes[bytesWritten], count - bytesWritten);
 			error = static_cast<ERROR>(mWire.endTransmission());
 
+			if (isOk(error)) {
+				break;
+			}
+
 			++w;
 			delay(1);
 		}
@@ -218,7 +222,7 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t *bytes, const size_t cou
 }
 
 AT24CxEeprom::AT24CxEeprom(TwoWire& wire, uint8_t deviceAddress)
-		: mAT24CxDeviceAddress((deviceAddress | 0xa0) >> 1), mWire(wire) {
+		: mAT24CxDeviceAddress((deviceAddress & 0x07) | 0x50), mWire(wire) {
 }
 
 // --- Specific chips
