@@ -153,6 +153,14 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 	return error;
 }
 
+size_t AT24CxEeprom::maxBulkReadQuantity() const {
+#if defined SERIAL_BUFFER_SIZE
+  return static_cast<size_t>(SERIAL_BUFFER_SIZE);
+#else
+  return std::numeric_limits<size_t>::max();
+#endif
+}
+
 AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress, const uint8_t pageOffset,
 		uint8_t *bytes, const size_t count) {
 
@@ -178,10 +186,8 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 			if (isNoError(error)) {
 				const size_t i = bytesRead;
 
-				// There is a bug in the Wire library that will cause an out of bounds crash, if we
-				// request more than the SERIAL_BUFFER_SIZE. Hence we better do the limitation here.
-				const size_t nrequest = std::min(static_cast<size_t>(SERIAL_BUFFER_SIZE), count - bytesRead);
-				n = mWire.requestFrom(mAT24CxDeviceAddress, nrequest);
+				const size_t quantity = std::min(maxBulkReadQuantity(), count - bytesRead);
+				n = mWire.requestFrom(mAT24CxDeviceAddress, quantity);
 
 				if (mWire.available()) {
 					for (size_t j = 0; j < n; j++) {

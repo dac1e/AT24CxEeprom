@@ -125,6 +125,10 @@ private:
 
 	ERROR readFromPage(const uint16_t pageAlignedAddress, const uint8_t pageOffset,
 		uint8_t* bytes, const size_t count);
+
+	// This limits the number of bytes that are read in one read operation. It can
+	// be overridden by a user defined AT24C - class.
+	virtual size_t maxBulkReadQuantity() const;
 };
 
 class AT24C01 : public AT24CxEeprom { // 1 KBit
