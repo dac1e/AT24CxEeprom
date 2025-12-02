@@ -29,14 +29,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-
-// Forward declaration of TwoWire;
-#ifndef ARDUINO_ARCH_MBED
-class TwoWire;
-#else
-namespace arduino{class MbedI2C;}
-typedef arduino::MbedI2C TwoWire;
-#endif
+#include <Wire.h>
 
 class AT24CxEeprom {
 public:
@@ -104,7 +97,7 @@ public:
 	 * get the page size of the eeprom.
 	 * @return the page size of the eeprom in bytes.
 	 */
-	virtual uint32_t pageSize()const = 0;
+	virtual uint32_t pageSize() const = 0;
 
 private:
 	enum ERROR : uint8_t {
@@ -117,10 +110,9 @@ private:
 		NO_DATA_AVAILABLE,
 	};
 
-	inline bool isOk(const ERROR error)const {return (error == WIRE_NO_ERROR);}
-
-	static constexpr size_t WRITE_RETRIES = 8;
-	static constexpr size_t READ_RETRIES  = 8;
+	inline bool isNoError(const ERROR error)const {
+	  return (error == WIRE_NO_ERROR);
+	}
 
 	uint8_t mAT24CxDeviceAddress;
 	TwoWire& mWire;
@@ -135,14 +127,49 @@ private:
 		uint8_t* bytes, const size_t count);
 };
 
-class AT24C32 : public AT24CxEeprom {
+class AT24C01 : public AT24CxEeprom { // 1 KBit
+public:
+  AT24C01(TwoWire &wire, uint8_t deviceAddress);
+  uint32_t totalSize() const override;
+  uint32_t pageSize() const override;
+};
+
+class AT24C02 : public AT24CxEeprom { // 2 KBit
+public:
+  AT24C02(TwoWire &wire, uint8_t deviceAddress);
+  uint32_t totalSize() const override;
+  uint32_t pageSize() const override;
+};
+
+class AT24C04 : public AT24CxEeprom { // 4 KBit
+public:
+  AT24C04(TwoWire &wire, uint8_t deviceAddress);
+  uint32_t totalSize() const override;
+  uint32_t pageSize() const override;
+};
+
+class AT24C08 : public AT24CxEeprom { // 8 KBit
+public:
+  AT24C08(TwoWire &wire, uint8_t deviceAddress);
+  uint32_t totalSize() const override;
+  uint32_t pageSize() const override;
+};
+
+class AT24C16 : public AT24CxEeprom { // 16 KBit
+public:
+  AT24C16(TwoWire &wire, uint8_t deviceAddress);
+  uint32_t totalSize() const override;
+  uint32_t pageSize() const override;
+};
+
+class AT24C32 : public AT24CxEeprom { // 32 KBit
 public:
 	AT24C32(TwoWire &wire, uint8_t deviceAddress);
 	uint32_t totalSize() const override;
 	uint32_t pageSize() const override;
 };
 
-class AT24C64 : public AT24CxEeprom {
+class AT24C64 : public AT24CxEeprom { // 64 KBit
 public:
 	AT24C64(TwoWire &wire, uint8_t deviceAddress);
 	uint32_t totalSize() const override;
@@ -150,25 +177,39 @@ private:
 	uint32_t pageSize() const override;
 };
 
-class AT24C128 : public AT24CxEeprom {
+class AT24C128 : public AT24CxEeprom { // 128 KBit
 public:
 	AT24C128(TwoWire &wire, uint8_t deviceAddress);
 	uint32_t totalSize() const override;
 	uint32_t pageSize() const override;
 };
 
-class AT24C256 : public AT24CxEeprom {
+class AT24C256 : public AT24CxEeprom { // 256 KBit
 public:
 	AT24C256(TwoWire &wire, uint8_t deviceAddress);
 	uint32_t totalSize() const override;
 	uint32_t pageSize() const override;
 };
 
-class AT24C512 : public AT24CxEeprom {
+class AT24C512 : public AT24CxEeprom { // 512 KBit
 public:
 	AT24C512(TwoWire &wire, uint8_t deviceAddress);
 	uint32_t totalSize() const override;
 	uint32_t pageSize() const override;
+};
+
+class AT24CM01 : public AT24CxEeprom { // 1 Mbit
+public:
+  AT24CM01(TwoWire &wire, uint8_t deviceAddress);
+  uint32_t totalSize() const override;
+  uint32_t pageSize() const override;
+};
+
+class AT24CM02 : public AT24CxEeprom { // 2 Mbit
+public:
+  AT24CM02(TwoWire &wire, uint8_t deviceAddress);
+  uint32_t totalSize() const override;
+  uint32_t pageSize() const override;
 };
 
 #endif /* AT24Cx_HPP_ */

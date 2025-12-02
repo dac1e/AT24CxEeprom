@@ -96,7 +96,7 @@ bool Test::writeReadAndCompare(size_t bytesCount, uint8_t pattern, uint16_t addr
 	uint8_t* readBuffer = new uint8_t [2*mEeprom->pageSize()];
 	mEeprom->read(address,readBuffer, bytesCount);
 
-	const bool result = ( memcmp(readBuffer, writeBuffer, bytesCount) == 0 );
+	const bool result = (memcmp(readBuffer, writeBuffer, bytesCount) == 0);
 
 	delete[] readBuffer;
 	delete[] writeBuffer;

@@ -1,3 +1,27 @@
+/*
+  AT24eeprom - Arduino libary for driving the AT24 I2 based eeproms Copyright (c)
+  2025 Wolfgang Schmieder.  All right reserved.
+
+  Contributors:
+  - Wolfgang Schmieder
+
+  Project home: https://github.com/dac1e/AT24eeprom/
+
+  This library is free software; you can redistribute it and/or modify it
+  the terms of the GNU Lesser General Public License as under published
+  by the Free Software Foundation; either version 3.0 of the License,
+  or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+*/
+
 #include "Arduino.h"
 
 #include <Wire.h>
@@ -59,15 +83,15 @@ static void testWriteRead(uint8_t pattern) {
   }
 }
 
-static size_t constexpr LOOPS_MAX = 3;
-static size_t nLoops = LOOPS_MAX;
+static size_t constexpr LOOPS = 3;
+static size_t nRemainingLoops = LOOPS;
 
 //The setup function is called once at startup of the sketch
 void setup()
 {
   output.begin(115200);
   output.println();
-  output.println("Starting read/write test.");
+  output.println("Starting write/read test.");
   eeprom.begin();
 }
 
@@ -76,14 +100,14 @@ void setup()
 void loop()
 {
   delay(3000);
-  if(nLoops) {
-    --nLoops;
+  if(nRemainingLoops) {
+    --nRemainingLoops;
     output.println();
     output.print("Executing test loop #");
-    output.println(LOOPS_MAX-nLoops);
+    output.println(LOOPS - nRemainingLoops);
     testWriteRead(0x55);
     testWriteRead(0xAA);
-    if(not nLoops) {
+    if(not nRemainingLoops) {
       output.println();
       output.println("Test finished.");
     }

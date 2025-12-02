@@ -1,0 +1,35 @@
+#######################################
+# Syntax Coloring Map For ExampleLibrary
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+AT24CxEeprom  KEYWORD1
+AT24C32       KEYWORD1
+AT24C64       KEYWORD1
+AT24C128      KEYWORD1
+AT24C256      KEYWORD1
+AT24C512      KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin		KEYWORD2
+write       KEYWORD2
+read     	KEYWORD2
+totalSize	KEYWORD2
+pageSize 	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+CLK_STANDARD_SPEED   LITERAL1
+CLK_HIGH_SPEED       LITERAL1

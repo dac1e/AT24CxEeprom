@@ -35,6 +35,8 @@
 #undef min
 #undef max
 
+static constexpr size_t WRITE_RETRIES = 10;
+static constexpr size_t READ_RETRIES  = 10;
 
 void AT24CxEeprom::begin() {
 	mWire.begin();
@@ -59,7 +61,7 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t byte) {
 		// write data
 		mWire.write(byte);
 		const ERROR error = static_cast<ERROR>(mWire.endTransmission());
-		if (isOk(error)) {
+		if (isNoError(error)) {
 			return true;
 		}
 
@@ -81,7 +83,7 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t &byte) {
 
 		const ERROR error = static_cast<ERROR>(mWire.endTransmission());
 
-		if (isOk(error)) {
+		if (isNoError(error)) {
 			mWire.requestFrom(mAT24CxDeviceAddress, static_cast<uint8_t>(1));
 			if (mWire.available()) {
 				byte = mWire.read();
@@ -102,14 +104,14 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t *bytes, const siz
 	size_t n = std::min(count, size_t(pageSize()) - static_cast<size_t>(pageOffset));
 
 	ERROR error = WIRE_NO_ERROR;
-	while (((count - i) > 0) && isOk(error)) {
+	while (((count - i) > 0) && isNoError(error)) {
 		error = writeToPage(pageAlignedAddress, pageOffset, &bytes[i], n);
 		pageAlignedAddress += pageSize();
 		pageOffset = 0;
 		i += n;
 		n = std::min((count - i), size_t(pageSize()));
 	}
-	return isOk(error);
+	return isNoError(error);
 }
 
 AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress, const uint8_t pageOffset,
@@ -122,7 +124,7 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 	ERROR error = WIRE_NO_ERROR;
 
 	size_t bytesWritten = 0;
-	while (((count - bytesWritten)) > 0 && isOk(error)) {
+	while (((count - bytesWritten)) > 0 && isNoError(error)) {
 		size_t n = 0;
 		size_t w = 0;
 		while (w < WRITE_RETRIES) {
@@ -137,7 +139,7 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 			n = mWire.write(&bytes[bytesWritten], count - bytesWritten);
 			error = static_cast<ERROR>(mWire.endTransmission());
 
-			if (isOk(error)) {
+			if (isNoError(error)) {
 				break;
 			}
 
@@ -161,7 +163,7 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 	ERROR error = WIRE_NO_ERROR;
 
 	size_t bytesRead = 0;
-	while (((count - bytesRead) > 0) && isOk(error)) {
+	while (((count - bytesRead) > 0) && isNoError(error)) {
 		size_t n = 0;
 		size_t r = 0;
 		while (r < READ_RETRIES) {
@@ -173,7 +175,7 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 			mWire.write(lowByte(address));
 			error = static_cast<ERROR>(mWire.endTransmission());
 
-			if (isOk(error)) {
+			if (isNoError(error)) {
 				const size_t i = bytesRead;
 
 				// There is a bug in the Wire library that will cause an out of bounds crash, if we
@@ -211,14 +213,14 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t *bytes, const size_t cou
 	uint32_t n = std::min(count, size_t(pageSize()) - static_cast<size_t>(pageOffset));
 
 	ERROR error = WIRE_NO_ERROR;
-	while (((count - i) > 0) && isOk(error)) {
+	while (((count - i) > 0) && isNoError(error)) {
 		error = readFromPage(pageAlignedAddress, pageOffset, &bytes[i], n);
 		pageAlignedAddress += pageSize();
 		pageOffset = 0;
 		i += n;
 		n = std::min((count - i), uint32_t(pageSize()));
 	}
-	return isOk(error);
+	return isNoError(error);
 }
 
 AT24CxEeprom::AT24CxEeprom(TwoWire& wire, uint8_t deviceAddress)
@@ -226,6 +228,66 @@ AT24CxEeprom::AT24CxEeprom(TwoWire& wire, uint8_t deviceAddress)
 }
 
 // --- Specific chips
+AT24C01::AT24C01(TwoWire &wire, uint8_t deviceAddress)
+    : AT24CxEeprom(wire, deviceAddress) {
+}
+
+uint32_t AT24C01::totalSize() const {
+  return 0x80;
+}
+
+uint32_t AT24C01::pageSize() const {
+  return 8;
+}
+
+AT24C02::AT24C02(TwoWire &wire, uint8_t deviceAddress)
+    : AT24CxEeprom(wire, deviceAddress) {
+}
+
+uint32_t AT24C02::totalSize() const {
+  return 0x100;
+}
+
+uint32_t AT24C02::pageSize() const {
+  return 8;
+}
+
+AT24C04::AT24C04(TwoWire &wire, uint8_t deviceAddress)
+    : AT24CxEeprom(wire, deviceAddress) {
+}
+
+uint32_t AT24C04::totalSize() const {
+  return 0x200;
+}
+
+uint32_t AT24C04::pageSize() const {
+  return 16;
+}
+
+AT24C08::AT24C08(TwoWire &wire, uint8_t deviceAddress)
+    : AT24CxEeprom(wire, deviceAddress) {
+}
+
+uint32_t AT24C08::totalSize() const {
+  return 0x400;
+}
+
+uint32_t AT24C08::pageSize() const {
+  return 16;
+}
+
+AT24C16::AT24C16(TwoWire &wire, uint8_t deviceAddress)
+    : AT24CxEeprom(wire, deviceAddress) {
+}
+
+uint32_t AT24C16::totalSize() const {
+  return 0x800;
+}
+
+uint32_t AT24C16::pageSize() const {
+  return 16;
+}
+
 AT24C32::AT24C32(TwoWire &wire, uint8_t deviceAddress)
 		: AT24CxEeprom(wire, deviceAddress) {
 }
@@ -284,5 +346,29 @@ uint32_t AT24C512::totalSize() const {
 
 uint32_t AT24C512::pageSize() const {
 	return 128;
+}
+
+AT24CM01::AT24CM01(TwoWire &wire, uint8_t deviceAddress)
+    : AT24CxEeprom(wire, deviceAddress) {
+}
+
+uint32_t AT24CM01::totalSize() const {
+  return 0x20000;
+}
+
+uint32_t AT24CM01::pageSize() const {
+  return 256;
+}
+
+AT24CM02::AT24CM02(TwoWire &wire, uint8_t deviceAddress)
+    : AT24CxEeprom(wire, deviceAddress) {
+}
+
+uint32_t AT24CM02::totalSize() const {
+  return 0x40000;
+}
+
+uint32_t AT24CM02::pageSize() const {
+  return 256;
 }
 
