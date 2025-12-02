@@ -22,7 +22,9 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
-#include <algorithm>
+
+
+
 #include <stdint.h>
 #include <assert.h>
 #define ASSERT assert
@@ -34,6 +36,15 @@
 
 #undef min
 #undef max
+
+static inline size_t min(size_t a, size_t b) {return a < b ? a : b;}
+
+#if defined SIZE_MAX
+static size_t sizeMax() {return SIZE_MAX;}
+#else
+#include <limits>
+static size_t sizeMax() {return std::numeric_limits<size_t>::max();}
+#endif
 
 static constexpr size_t WRITE_RETRIES = 10;
 static constexpr size_t READ_RETRIES  = 10;
@@ -101,7 +112,7 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t *bytes, const siz
 	uint8_t pageOffset = address & pageOffsetMask();
 
 	size_t i = 0;
-	size_t n = std::min(count, size_t(pageSize()) - static_cast<size_t>(pageOffset));
+	size_t n = min(count, size_t(pageSize()) - static_cast<size_t>(pageOffset));
 
 	ERROR error = WIRE_NO_ERROR;
 	while (((count - i) > 0) && isNoError(error)) {
@@ -109,7 +120,7 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t *bytes, const siz
 		pageAlignedAddress += pageSize();
 		pageOffset = 0;
 		i += n;
-		n = std::min((count - i), size_t(pageSize()));
+		n = min((count - i), size_t(pageSize()));
 	}
 	return isNoError(error);
 }
@@ -157,7 +168,7 @@ size_t AT24CxEeprom::maxBulkReadQuantity() const {
 #if defined SERIAL_BUFFER_SIZE
   return static_cast<size_t>(SERIAL_BUFFER_SIZE);
 #else
-  return std::numeric_limits<size_t>::max();
+  return sizeMax();
 #endif
 }
 
@@ -186,7 +197,7 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 			if (isNoError(error)) {
 				const size_t i = bytesRead;
 
-				const size_t quantity = std::min(maxBulkReadQuantity(), count - bytesRead);
+				const size_t quantity = min(maxBulkReadQuantity(), count - bytesRead);
 				n = mWire.requestFrom(mAT24CxDeviceAddress, quantity);
 
 				if (mWire.available()) {
@@ -216,7 +227,7 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t *bytes, const size_t cou
 	uint8_t pageOffset = address & pageOffsetMask();
 
 	uint32_t i = 0;
-	uint32_t n = std::min(count, size_t(pageSize()) - static_cast<size_t>(pageOffset));
+	uint32_t n = min(count, size_t(pageSize()) - static_cast<size_t>(pageOffset));
 
 	ERROR error = WIRE_NO_ERROR;
 	while (((count - i) > 0) && isNoError(error)) {
@@ -224,7 +235,7 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t *bytes, const size_t cou
 		pageAlignedAddress += pageSize();
 		pageOffset = 0;
 		i += n;
-		n = std::min((count - i), uint32_t(pageSize()));
+		n = min((count - i), uint32_t(pageSize()));
 	}
 	return isNoError(error);
 }
