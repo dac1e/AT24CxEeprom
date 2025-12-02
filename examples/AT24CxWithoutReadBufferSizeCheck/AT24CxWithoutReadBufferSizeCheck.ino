@@ -22,17 +22,20 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 */
 
+/**
+ * Note: The main purpose of this sketch is to reproduce a bug in the nRF52840 TwoWire driver.
+ */
 #include "Arduino.h"
 
 #include <Wire.h>
 #include "AT24CxEeprom.h"
 
-class MYAT24C512 : AT24C512 {
+class MYAT24C512 : public AT24C512 {
 public:
   MYAT24C512(TwoWire &wire, uint8_t deviceAddress) : AT24C512(wire, deviceAddress) {
   }
 private:
-  // Override this function so that read quantity is not artificially limited.
+  // We override this function so that read quantity is not artificially limited.
   // Hence the TwoWire driver has to take care, that there is no read buffer
   // overrun.
   virtual size_t maxBulkReadQuantity() const override {
