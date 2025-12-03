@@ -25,10 +25,18 @@
 /**
  * Note: The main purpose of this sketch is to reproduce a bug in the nRF52840 TwoWire driver.
  */
+
 #include "Arduino.h"
 
 #include <Wire.h>
 #include "AT24CxEeprom.h"
+
+#if defined SIZE_MAX
+static size_t sizeMax() {return SIZE_MAX;}
+#else
+#include <limits>
+static size_t sizeMax() {return std::numeric_limits<size_t>::max();}
+#endif
 
 class MYAT24C512 : public AT24C512 {
 public:
@@ -39,7 +47,7 @@ private:
   // Hence the TwoWire driver has to take care, that there is no read buffer
   // overrun.
   virtual size_t maxBulkReadQuantity() const override {
-    return std::numeric_limits<size_t>::max();
+    return sizeMax();
   }
 };
 
