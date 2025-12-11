@@ -202,18 +202,4 @@ public:
 	uint32_t pageSize() const override;
 };
 
-class AT24CM01 : public AT24CxEeprom { // 1 Mbit
-public:
-  AT24CM01(TwoWire &wire, uint8_t deviceAddress);
-  uint32_t totalSize() const override;
-  uint32_t pageSize() const override;
-};
-
-class AT24CM02 : public AT24CxEeprom { // 2 Mbit
-public:
-  AT24CM02(TwoWire &wire, uint8_t deviceAddress);
-  uint32_t totalSize() const override;
-  uint32_t pageSize() const override;
-};
-
 #endif /* AT24Cx_HPP_ */

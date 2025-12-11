@@ -364,28 +364,3 @@ uint32_t AT24C512::totalSize() const {
 uint32_t AT24C512::pageSize() const {
 	return 128;
 }
-
-AT24CM01::AT24CM01(TwoWire &wire, uint8_t deviceAddress)
-    : AT24CxEeprom(wire, deviceAddress) {
-}
-
-uint32_t AT24CM01::totalSize() const {
-  return 0x20000;
-}
-
-uint32_t AT24CM01::pageSize() const {
-  return 256;
-}
-
-AT24CM02::AT24CM02(TwoWire &wire, uint8_t deviceAddress)
-    : AT24CxEeprom(wire, deviceAddress) {
-}
-
-uint32_t AT24CM02::totalSize() const {
-  return 0x40000;
-}
-
-uint32_t AT24CM02::pageSize() const {
-  return 256;
-}
-
