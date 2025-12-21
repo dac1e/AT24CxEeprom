@@ -47,7 +47,7 @@ static size_t sizeMax() {return std::numeric_limits<size_t>::max();}
 #endif
 
 static constexpr size_t WRITE_RETRIES = 10;
-static constexpr size_t READ_RETRIES  = 10;
+static constexpr size_t READ_RETRIES  = 8;
 
 void AT24CxEeprom::begin() {
 	mWire.begin();
@@ -84,8 +84,9 @@ bool AT24CxEeprom::write(const uint16_t address, const uint8_t byte) {
 }
 
 bool AT24CxEeprom::read(const uint16_t address, uint8_t &byte) {
-	size_t i = 0;
-	while (i < READ_RETRIES) {
+	size_t r = 0;
+	size_t delayMsec = 1;
+	while (r < READ_RETRIES) {
 		mWire.beginTransmission(mAT24CxDeviceAddress);
 
 		// write address
@@ -95,14 +96,26 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t &byte) {
 		const ERROR error = static_cast<ERROR>(mWire.endTransmission());
 
 		if (isNoError(error)) {
-			mWire.requestFrom(mAT24CxDeviceAddress, static_cast<uint8_t>(1));
-			if (mWire.available()) {
-				byte = mWire.read();
-			}
-			return true;
+		  while(true) {
+        mWire.requestFrom(mAT24CxDeviceAddress, static_cast<uint8_t>(1));
+        if (mWire.available()) {
+          byte = mWire.read();
+          return true;
+        } else {
+          if(r < READ_RETRIES) {
+            ++r;
+            delay(delayMsec);
+            delayMsec *= 2;
+          } else {
+            return false;
+          }
+        }
+		  }
 		}
-		++i;
-		delay(1);
+
+		++r;
+		delay(delayMsec);
+		delayMsec *= 2;
 	}
 	return false;
 }
@@ -180,6 +193,7 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 	ASSERT((static_cast<uint32_t>(pageAlignedAddress) + pageSize()) <= totalSize());
 
 	ERROR error = WIRE_NO_ERROR;
+	uint32_t delayMsec = 1;
 
 	size_t bytesRead = 0;
 	while (((count - bytesRead) > 0) && isNoError(error)) {
@@ -195,26 +209,36 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 			error = static_cast<ERROR>(mWire.endTransmission());
 
 			if (isNoError(error)) {
+
 				const size_t i = bytesRead;
-
 				const size_t quantity = min(maxBulkReadQuantity(), count - bytesRead);
-				n = mWire.requestFrom(mAT24CxDeviceAddress, quantity);
 
-				if (mWire.available()) {
-					for (size_t j = 0; j < n; j++) {
-						const int data = mWire.read();
-						ASSERT(data >= 0);
-						bytes[i + j] = lowByte(data);
-					}
-				} else {
-					error = NO_DATA_AVAILABLE;
+				while(true) {
+				  n = mWire.requestFrom(mAT24CxDeviceAddress, quantity);
+          if (mWire.available()) {
+            for (size_t j = 0; j < n; j++) {
+              const int data = mWire.read();
+              ASSERT(data >= 0);
+              bytes[i + j] = lowByte(data);
+            }
+            break;
+          } else {
+            if(r < READ_RETRIES) {
+              ++r;
+              delay(delayMsec);
+              delayMsec *= 2;
+            } else {
+              error = NO_DATA_AVAILABLE;
+              break;
+            }
+          }
 				}
-
 				break;
 			}
 
 			++r;
-			delay(1);
+			delay(delayMsec);
+			delayMsec *= 2;
 		}
 		bytesRead += n;
 	}

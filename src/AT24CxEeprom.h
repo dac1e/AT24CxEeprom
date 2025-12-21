@@ -203,3 +203,6 @@ public:
 };
 
 #endif /* AT24Cx_HPP_ */
+
+//Added by Sloeber 
+#pragma once
