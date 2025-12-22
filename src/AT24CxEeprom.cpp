@@ -274,11 +274,11 @@ AT24C01::AT24C01(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C01::totalSize() const {
-  return 0x80;
+  return TOTAL_SIZE;
 }
 
 uint32_t AT24C01::pageSize() const {
-  return 8;
+  return PAGE_SIZE;
 }
 
 AT24C02::AT24C02(TwoWire &wire, uint8_t deviceAddress)
@@ -286,11 +286,11 @@ AT24C02::AT24C02(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C02::totalSize() const {
-  return 0x100;
+  return TOTAL_SIZE;
 }
 
 uint32_t AT24C02::pageSize() const {
-  return 8;
+  return PAGE_SIZE;
 }
 
 AT24C04::AT24C04(TwoWire &wire, uint8_t deviceAddress)
@@ -298,11 +298,11 @@ AT24C04::AT24C04(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C04::totalSize() const {
-  return 0x200;
+  return TOTAL_SIZE;
 }
 
 uint32_t AT24C04::pageSize() const {
-  return 16;
+  return PAGE_SIZE;
 }
 
 AT24C08::AT24C08(TwoWire &wire, uint8_t deviceAddress)
@@ -310,11 +310,11 @@ AT24C08::AT24C08(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C08::totalSize() const {
-  return 0x400;
+  return TOTAL_SIZE;
 }
 
 uint32_t AT24C08::pageSize() const {
-  return 16;
+  return PAGE_SIZE;
 }
 
 AT24C16::AT24C16(TwoWire &wire, uint8_t deviceAddress)
@@ -322,11 +322,11 @@ AT24C16::AT24C16(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C16::totalSize() const {
-  return 0x800;
+  return TOTAL_SIZE;
 }
 
 uint32_t AT24C16::pageSize() const {
-  return 16;
+  return PAGE_SIZE;
 }
 
 AT24C32::AT24C32(TwoWire &wire, uint8_t deviceAddress)
@@ -334,11 +334,11 @@ AT24C32::AT24C32(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C32::totalSize() const {
-	return 0x1000;
+	return TOTAL_SIZE;
 }
 
 uint32_t AT24C32::pageSize() const {
-	return 32;
+	return PAGE_SIZE;
 }
 
 AT24C64::AT24C64(TwoWire &wire, uint8_t deviceAddress)
@@ -346,11 +346,11 @@ AT24C64::AT24C64(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C64::totalSize() const {
-	return 0x2000;
+	return TOTAL_SIZE;
 }
 
 uint32_t AT24C64::pageSize() const {
-	return 32;
+	return PAGE_SIZE;
 }
 
 AT24C128::AT24C128(TwoWire &wire, uint8_t deviceAddress)
@@ -358,11 +358,11 @@ AT24C128::AT24C128(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C128::totalSize() const {
-	return 0x4000;
+	return TOTAL_SIZE;
 }
 
 uint32_t AT24C128::pageSize() const {
-	return 64;
+	return PAGE_SIZE;
 }
 
 AT24C256::AT24C256(TwoWire &wire, uint8_t deviceAddress)
@@ -370,11 +370,11 @@ AT24C256::AT24C256(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C256::totalSize() const {
-	return 0x8000;
+	return TOTAL_SIZE;
 }
 
 uint32_t AT24C256::pageSize() const {
-	return 64;
+	return PAGE_SIZE;
 }
 
 AT24C512::AT24C512(TwoWire &wire, uint8_t deviceAddress)
@@ -382,9 +382,9 @@ AT24C512::AT24C512(TwoWire &wire, uint8_t deviceAddress)
 }
 
 uint32_t AT24C512::totalSize() const {
-	return 0x10000;
+	return TOTAL_SIZE;
 }
 
 uint32_t AT24C512::pageSize() const {
-	return 128;
+	return PAGE_SIZE;
 }
