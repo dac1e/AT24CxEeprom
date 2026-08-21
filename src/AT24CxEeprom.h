@@ -120,6 +120,10 @@ private:
 	inline uint32_t pageOffsetMask()const {return pageSize()-1;}
 	inline uint32_t pageMask()const {return ~pageOffsetMask();}
 
+	void beginTransmission(const uint8_t deviceAddress, const uint16_t memoryAddress, const uint32_t totalSize);
+
+	void writeWordAddress(const uint16_t address);
+
 	ERROR writeToPage(const uint16_t pageAlignedAddress, const uint8_t pageOffset,
 		const uint8_t* bytes, const size_t count);
 
@@ -232,6 +236,9 @@ public:
 };
 
 #endif /* AT24Cx_HPP_ */
+
+//Added by Sloeber 
+#pragma once
 
 //Added by Sloeber 
 #pragma once

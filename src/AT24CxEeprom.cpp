@@ -39,6 +39,23 @@
 
 static inline size_t min(size_t a, size_t b) {return a < b ? a : b;}
 
+inline bool hasTwoByteMemoryAddress(const uint32_t totalSize) {
+  return totalSize > 0x800;
+}
+
+inline uint8_t memoryAddressUpperBitsMask(const uint32_t totalSize) {
+  switch(totalSize) {
+  case 0x800:
+    return 0x07;
+  case 0x400:
+    return 0x03;
+  case 0x200:
+    return 0x01;
+  default:
+    return 0x00;
+  }
+}
+
 #if defined SIZE_MAX
 static size_t sizeMax() {return SIZE_MAX;}
 #else
@@ -58,16 +75,30 @@ void AT24CxEeprom::begin(CLOCK_SPEED_HZ speed) {
 	mWire.setClock(speed);
 }
 
+void AT24CxEeprom::beginTransmission(const uint8_t deviceAddress, const uint16_t memoryAddress, const uint32_t totalSize) {
+  if(hasTwoByteMemoryAddress(totalSize)) {
+    mWire.beginTransmission(deviceAddress);
+  } else {
+    mWire.beginTransmission(deviceAddress | ((memoryAddress >> 8) & memoryAddressUpperBitsMask(totalSize)));
+  }
+}
+
+void AT24CxEeprom::writeWordAddress(const uint16_t address) {
+  if(hasTwoByteMemoryAddress(totalSize())) {
+    mWire.write(highByte(address));
+  }
+  mWire.write(lowByte(address));
+}
+
 bool AT24CxEeprom::write(const uint16_t address, const uint8_t byte) {
 	ASSERT(address < totalSize());
 
 	size_t i = 0;
 	while (i < WRITE_RETRIES) {
-		mWire.beginTransmission(mAT24CxDeviceAddress);
+		beginTransmission(mAT24CxDeviceAddress, address, totalSize());
 
 		// write address
-		mWire.write(highByte(address));
-		mWire.write(lowByte(address));
+		writeWordAddress(address);
 
 		// write data
 		mWire.write(byte);
@@ -87,11 +118,10 @@ bool AT24CxEeprom::read(const uint16_t address, uint8_t &byte) {
 	size_t r = 0;
 	size_t delayMsec = 1;
 	while (r < READ_RETRIES) {
-		mWire.beginTransmission(mAT24CxDeviceAddress);
+    beginTransmission(mAT24CxDeviceAddress, address, totalSize());
 
-		// write address
-		mWire.write(highByte(address));
-		mWire.write(lowByte(address));
+    // write address
+    writeWordAddress(address);
 
 		const ERROR error = static_cast<ERROR>(mWire.endTransmission());
 
@@ -152,12 +182,11 @@ AT24CxEeprom::ERROR AT24CxEeprom::writeToPage(const uint16_t pageAlignedAddress,
 		size_t n = 0;
 		size_t w = 0;
 		while (w < WRITE_RETRIES) {
-			mWire.beginTransmission(mAT24CxDeviceAddress);
+			const uint16_t address = pageAlignedAddress + pageOffset + bytesWritten;
+	    beginTransmission(mAT24CxDeviceAddress, address, totalSize());
 
 			// write address
-			const uint16_t address = pageAlignedAddress + pageOffset + bytesWritten;
-			mWire.write(highByte(address));
-			mWire.write(lowByte(address));
+			writeWordAddress(address);
 
 			// write data
 			n = mWire.write(&bytes[bytesWritten], count - bytesWritten);
@@ -200,12 +229,12 @@ AT24CxEeprom::ERROR AT24CxEeprom::readFromPage(const uint16_t pageAlignedAddress
 		size_t n = 0;
 		size_t r = 0;
 		while (r < READ_RETRIES) {
-			mWire.beginTransmission(mAT24CxDeviceAddress);
+			const uint16_t address = pageAlignedAddress + pageOffset + bytesRead;
+      beginTransmission(mAT24CxDeviceAddress, address, totalSize());
 
 			// write address
-			const uint16_t address = pageAlignedAddress + pageOffset + bytesRead;
-			mWire.write(highByte(address));
-			mWire.write(lowByte(address));
+	    writeWordAddress(address);
+
 			error = static_cast<ERROR>(mWire.endTransmission());
 
 			if (isNoError(error)) {
